@@ -3,7 +3,7 @@ import torch
 foreign_lang_mask = None
 
 
-def foreign_language_blocker(tokenizer, input_ids, logits):
+def blocker(tokenizer, input_ids, logits):
     """중국어, 일본어, 러시아어 토큰을 차단하는 함수"""
     global foreign_lang_mask
 

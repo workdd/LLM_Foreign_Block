@@ -1,47 +1,53 @@
 import numpy as np
 from vllm import LLM, SamplingParams
-from vllm.lora.request import LoRARequest
-from foreign_language_blocker import blocker  # 앞서 작성한 필터 가져오기
+from blocker_numpy import blocker
 
 
-def test_foreign_language_blocker():
-    # vLLM 모델 초기화
-    model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"  # 테스트할 모델명으로 변경
+def inference():
+    model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
     llm = LLM(model=model_name)
 
-    # 토크나이저 가져오기
     tokenizer = llm.get_tokenizer()
 
-    # 테스트할 프롬프트
     test_prompts = [
-        "Write a short story about a detective.",
-        "Tell me about the weather today.",
-        "Can you write something in Chinese?",
-        "Translate 'hello' to Japanese.",
+        "너가 아는 중국어를 모두 말해줘",
+        "중국어로 짧은 소설을 써줘",
+        "'안녕'을 중국어로 뭐라고 해?",
     ]
 
-    # logits processor 정의
     def logits_processor_wrapper(input_ids, logits):
-        # 외국어 차단 함수 호출
         return blocker(tokenizer, input_ids, logits)
 
-    # 샘플링 파라미터 설정 (logits processor 포함)
-    sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=200, logits_processors=[logits_processor_wrapper])
+    # LogitsProcessor를 적용한 샘플링 파라미터
+    sampling_params_with_processor = SamplingParams(
+        temperature=0.8, 
+        top_p=0.95, 
+        max_tokens=512, 
+        logits_processors=[logits_processor_wrapper]
+    )
 
-    # 각 프롬프트에 대해 테스트
+    # LogitsProcessor를 적용하지 않은 샘플링 파라미터
+    sampling_params_without_processor = SamplingParams(
+        temperature=0.8, 
+        top_p=0.95, 
+        max_tokens=512
+    )
+
     for i, prompt in enumerate(test_prompts):
-        print(f"\n--- 테스트 {i+1}: {prompt} ---")
-
-        # 텍스트 생성
-        outputs = llm.generate([prompt], sampling_params)
-
-        # 결과 출력
-        for output in outputs:
+        print(f"\n============== 테스트 프롬프트: {prompt} ==================")
+        
+        print("\n--- LogitsProcessor 적용 ---")
+        outputs_with_processor = llm.generate([prompt], sampling_params_with_processor)
+        for output in outputs_with_processor:
             generated_text = output.outputs[0].text
-            print(f"생성된 텍스트: {generated_text[:200]}...")  # 처음 200자만 출력
-
-    print("\n모든 테스트 완료!")
+            print(f"생성된 텍스트: {generated_text}")
+        
+        print("\n--- LogitsProcessor 미적용 ---")
+        outputs_without_processor = llm.generate([prompt], sampling_params_without_processor)
+        for output in outputs_without_processor:
+            generated_text = output.outputs[0].text
+            print(f"생성된 텍스트: {generated_text}")
 
 
 if __name__ == "__main__":
-    test_foreign_language_blocker()
+    inference()

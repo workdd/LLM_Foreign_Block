@@ -36,9 +36,6 @@ def blocker(tokenizer, input_ids, logits):
         # 차단할 인덱스 저장
         mask_indices = np.where(foreign_lang_mask)[0]
 
-        blocked_tokens = len(mask_indices)
-        print(f"외국어 문자 마스크 생성 - {blocked_tokens}개 토큰 차단됨")
-
     # NumPy 배열로 처리
     logits_max_idx = min(logits.shape[0], np.max(mask_indices) + 1 if len(mask_indices) > 0 else 0)
     valid_indices = mask_indices[mask_indices < logits_max_idx]
