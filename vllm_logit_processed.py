@@ -6,7 +6,7 @@ from foreign_language_blocker import blocker  # 앞서 작성한 필터 가져�
 
 def test_foreign_language_blocker():
     # vLLM 모델 초기화
-    model_name = "meta-llama/Llama-2-7b-chat-hf"  # 테스트할 모델명으로 변경
+    model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"  # 테스트할 모델명으로 변경
     llm = LLM(model=model_name)
 
     # 토크나이저 가져오기
