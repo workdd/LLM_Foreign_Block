@@ -15,8 +15,8 @@ LLM 모델의 외국어 토큰 생성을 차단하는 코드 구현
 
 ## 파일 구조 및 설명
 
--   `blocker_numpy.py`
-    -   NumPy 기반 외국어 토큰 차단 구현
+-   `blocker_numpy.py`, `blocker_torch.py`
+    -   NumPy 혹은, Torch Tensor 기반 외국어 토큰 차단 구현
     -   중국어, 일본어, 러시아어에 해당하는 유니코드 범위의 토큰을 식별하고 차단
         ```
         chinese_ranges = [
