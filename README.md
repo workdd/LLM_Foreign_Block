@@ -15,6 +15,7 @@ LLM 모델의 외국어 토큰 생성을 차단하는 코드 구현
 
 ## 이슈 업데이트
 - `blocker_numpy.py`는 현재 성능이 좋지 않아 torch 버전의 blocker를 사용하는 것을 추천드립니다.
+- 따라서, 기존 vllm 버전은 blocker_numpy.py를 사용하고 있는데, blocker_torch_vllm.py를 사용하시면 됩니다.
 
 ## 파일 구조 및 설명
 
