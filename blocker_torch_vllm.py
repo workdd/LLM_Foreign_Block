@@ -2,10 +2,9 @@ import numpy as np
 import torch
 import time
 
-foreign_lang_mask = None  # torch.bool 텐서로 캐시됨
+foreign_lang_mask = None
 
 def blocker(tokenizer, input_ids, logits):
-    """중국어, 일본어, 러시아어 토큰을 마스킹하는 logit processor (Torch 기반 최적화)"""
     global foreign_lang_mask
 
     start_time = time.time()
@@ -19,12 +18,7 @@ def blocker(tokenizer, input_ids, logits):
 
     if foreign_lang_mask is None:
         token_ids = list(range(vocab_size))
-
-        # 디코딩 (batch_decode 지원 시 활용)
-        if hasattr(tokenizer, "batch_decode"):
-            decoded_tokens = tokenizer.batch_decode([[i] for i in token_ids], skip_special_tokens=True)
-        else:
-            decoded_tokens = [tokenizer.decode([i]) for i in token_ids]
+        decoded_tokens = [tokenizer.decode([i]) for i in token_ids]
 
         # 마스킹할 문자 범위 정의
         def is_foreign(token):
@@ -38,7 +32,6 @@ def blocker(tokenizer, input_ids, logits):
         mask_list = [is_foreign(token) for token in decoded_tokens]
         foreign_lang_mask = torch.tensor(mask_list, dtype=torch.bool, device=logits.device)
 
-    # 마스킹 적용 (batch_size x vocab_size)
     logits[foreign_lang_mask] = float("-inf")
 
     print("logit 처리 시간:", time.time() - start_time)
