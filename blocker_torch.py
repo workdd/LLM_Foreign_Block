@@ -31,6 +31,9 @@ def blocker(tokenizer, input_ids, logits):
             logits.device
         )
 
-    # 해당 토큰에 대한 로짓을 -inf로 설정
-    logits[:, foreign_lang_mask] = -float("inf")
+    # 해당 토큰에 대한 로짓을 -inf로 설정 (차원 확인)
+    if logits.dim() == 1:
+        logits[foreign_lang_mask] = -float("inf")
+    else:
+        logits[:, foreign_lang_mask] = -float("inf")
     return logits

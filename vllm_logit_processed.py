@@ -1,12 +1,24 @@
-import numpy as np
 from vllm import LLM, SamplingParams
-from blocker_numpy import blocker
+from vllm.lora.request import LoRARequest
+from vllm.sampling_params import SamplingParams
+from vllm.outputs import RequestOutput
+from blocker_torch import blocker
+
+
+class BlockerProcessor:
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.foreign_lang_mask = None
+        self.mask_indices = None
+
+    def __call__(self, input_ids, logits):
+        return blocker(self.tokenizer, input_ids, logits)
 
 
 def inference():
-    model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
-    llm = LLM(model=model_name)
+    model_name = "Qwen/Qwen2.5-14B-Instruct"
 
+    llm = LLM(model=model_name, download_dir="/opt/models")
     tokenizer = llm.get_tokenizer()
 
     test_prompts = [
@@ -15,38 +27,32 @@ def inference():
         "'안녕'을 중국어로 뭐라고 해?",
     ]
 
-    def logits_processor_wrapper(input_ids, logits):
-        return blocker(tokenizer, input_ids, logits)
+    foreign_processor = BlockerProcessor(tokenizer)
 
     # LogitsProcessor를 적용한 샘플링 파라미터
-    sampling_params_with_processor = SamplingParams(
-        temperature=0.8, 
-        top_p=0.95, 
-        max_tokens=512, 
-        logits_processors=[logits_processor_wrapper]
-    )
+    sampling_params_with_processor = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=512, logits_processors=[foreign_processor])
 
     # LogitsProcessor를 적용하지 않은 샘플링 파라미터
-    sampling_params_without_processor = SamplingParams(
-        temperature=0.8, 
-        top_p=0.95, 
-        max_tokens=512
-    )
+    sampling_params_without_processor = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=512)
 
-    for i, prompt in enumerate(test_prompts):
+    # 추론 실행 (LogitsProcessor 적용)
+    outputs_with_processor = llm.generate(test_prompts, sampling_params_with_processor)
+
+    # 추론 실행 (LogitsProcessor 미적용)
+    outputs_without_processor = llm.generate(test_prompts, sampling_params_without_processor)
+
+    # 결과 출력
+    for i, (output_with, output_without) in enumerate(zip(outputs_with_processor, outputs_without_processor)):
+        prompt = output_with.prompt
+        generated_text_with = output_with.outputs[0].text
+        generated_text_without = output_without.outputs[0].text
+
         print(f"\n============== 테스트 프롬프트: {prompt} ==================")
-        
         print("\n--- LogitsProcessor 적용 ---")
-        outputs_with_processor = llm.generate([prompt], sampling_params_with_processor)
-        for output in outputs_with_processor:
-            generated_text = output.outputs[0].text
-            print(f"생성된 텍스트: {generated_text}")
-        
+        print(generated_text_with)
+
         print("\n--- LogitsProcessor 미적용 ---")
-        outputs_without_processor = llm.generate([prompt], sampling_params_without_processor)
-        for output in outputs_without_processor:
-            generated_text = output.outputs[0].text
-            print(f"생성된 텍스트: {generated_text}")
+        print(generated_text_without)
 
 
 if __name__ == "__main__":

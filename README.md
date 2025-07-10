@@ -14,13 +14,12 @@ LLM 모델의 외국어 토큰 생성을 차단하는 코드 구현
 4. 결과 생성: 차단된 토큰을 제외한 나머지 토큰으로 텍스트 생성
 
 ## 이슈 업데이트
-- `blocker_numpy.py`는 현재 성능이 좋지 않아 torch 버전의 blocker를 사용하는 것을 추천드립니다.
-- 따라서, 기존 vllm 버전은 blocker_numpy.py를 사용하고 있는데, blocker_torch_vllm.py를 사용하시면 됩니다.
+- 기존 `blocker_numpy.py`는 추론 성능을 떨어뜨리는 이슈가 있어 삭제했습니다.
 
 ## 파일 구조 및 설명
 
--   `blocker_numpy.py`, `blocker_torch.py`
-    -   NumPy 혹은, Torch Tensor 기반 외국어 토큰 차단 구현
+-  `blocker_torch.py`
+    -   Torch Tensor 기반 외국어 토큰 차단 구현
     -   중국어, 일본어, 러시아어에 해당하는 유니코드 범위의 토큰을 식별하고 차단
         ```
         chinese_ranges = [
